@@ -53,7 +53,8 @@ prepare() {
 build() {
   cd "$_gitname"
 
-  autoreconf --install
+  autoreconf -ivf
+
   ./configure \
     --prefix="/usr" \
     --sbindir="/usr/bin" \
