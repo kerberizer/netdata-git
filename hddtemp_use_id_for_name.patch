@@ -1,0 +1,11 @@
+--- netdata/python.d/hddtemp.chart.py.orig	2018-09-09 13:06:57.798451670 +0300
++++ netdata/python.d/hddtemp.chart.py	2018-09-09 13:07:34.916294890 +0300
+@@ -27,7 +27,7 @@
+ class Disk:
+     def __init__(self, id_, name, temp):
+         self.id = id_.split('/')[-1]
+-        self.name = name.replace(' ', '_')
++        self.name = self.id.replace(' ', '_')
+         self.temp = temp if temp.isdigit() else 0
+ 
+     def __repr__(self):

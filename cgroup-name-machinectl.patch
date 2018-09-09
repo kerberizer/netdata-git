@@ -1,0 +1,15 @@
+--- netdata/plugins.d/cgroup-name.sh.orig	2018-09-09 13:05:52.485580002 +0300
++++ netdata/plugins.d/cgroup-name.sh	2018-09-09 13:08:01.078108036 +0300
+@@ -145,6 +145,12 @@
+ 
+         NAME="$(echo ${CGROUP} | sed 's/.*machine.slice[_\/]\(.*\)\.service/\1/g')"
+ 
++    elif [[ "${CGROUP}" =~ machine.slice[_/].*\.scope ]]
++        then
++        # machinectl
++
++        NAME="$(systemd-escape -u $(echo ${CGROUP} | sed 's/.*machine.slice[_\/]machine-\(.*\)\.scope/\1/g' | tr '/' '\\'))"
++
+     elif [[ "${CGROUP}" =~ machine.slice_machine.*-qemu ]]
+         then
+         # libvirtd / qemu virtual machines
