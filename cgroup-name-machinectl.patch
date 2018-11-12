@@ -1,6 +1,8 @@
---- netdata/plugins.d/cgroup-name.sh.orig	2018-09-09 13:05:52.485580002 +0300
-+++ netdata/plugins.d/cgroup-name.sh	2018-09-09 13:08:01.078108036 +0300
-@@ -145,6 +145,12 @@
+diff --git a/collectors/cgroups.plugin/cgroup-name.sh.in b/collectors/cgroups.plugin/cgroup-name.sh.in
+index 53696a4b..6ecf39ce 100755
+--- a/collectors/cgroups.plugin/cgroup-name.sh.in
++++ b/collectors/cgroups.plugin/cgroup-name.sh.in
+@@ -152,6 +152,12 @@ if [ -z "${NAME}" ]
  
          NAME="$(echo ${CGROUP} | sed 's/.*machine.slice[_\/]\(.*\)\.service/\1/g')"
  

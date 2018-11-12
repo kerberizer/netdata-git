@@ -1,38 +1,46 @@
---- netdata/src/proc_diskstats.c.orig	2018-09-09 13:05:52.572241634 +0300
-+++ netdata/src/proc_diskstats.c	2018-09-09 13:06:28.076845320 +0300
-@@ -142,7 +142,9 @@
+diff --git a/collectors/proc.plugin/proc_diskstats.c b/collectors/proc.plugin/proc_diskstats.c
+index 387b395a..2d4d2bc7 100644
+--- a/collectors/proc.plugin/proc_diskstats.c
++++ b/collectors/proc.plugin/proc_diskstats.c
+@@ -144,8 +144,10 @@ static char *path_to_sys_block_device_bcache = NULL;
  static char *path_to_sys_devices_virtual_block_device = NULL;
  static char *path_to_device_mapper = NULL;
  static char *path_to_device_label = NULL;
 +static char *path_to_device_vdev = NULL;
  static char *path_to_device_id = NULL;
+ static char *path_to_veritas_volume_groups = NULL;
 +static int name_disks_by_vdev = CONFIG_BOOLEAN_NO;
  static int name_disks_by_id = CONFIG_BOOLEAN_NO;
  static int global_bcache_priority_stats_update_every = 0; // disabled by default
  
-@@ -375,8 +377,9 @@
+@@ -412,9 +414,10 @@ static inline char *get_disk_name(unsigned long major, unsigned long minor, char
  
-     if(!path_to_device_mapper || !*path_to_device_mapper || !get_disk_name_from_path(path_to_device_mapper, result, FILENAME_MAX + 1, major, minor, disk))
-         if(!path_to_device_label || !*path_to_device_label || !get_disk_name_from_path(path_to_device_label, result, FILENAME_MAX + 1, major, minor, disk))
--            if(name_disks_by_id != CONFIG_BOOLEAN_YES || !path_to_device_id || !*path_to_device_id || !get_disk_name_from_path(path_to_device_id, result, FILENAME_MAX + 1, major, minor, disk))
--                strncpy(result, disk, FILENAME_MAX);
-+            if(name_disks_by_vdev != CONFIG_BOOLEAN_YES || !path_to_device_vdev || !*path_to_device_vdev || !get_disk_name_from_path(path_to_device_vdev, result, FILENAME_MAX + 1, major, minor, disk))
-+                if(name_disks_by_id != CONFIG_BOOLEAN_YES || !path_to_device_id || !*path_to_device_id || !get_disk_name_from_path(path_to_device_id, result, FILENAME_MAX + 1, major, minor, disk))
-+                    strncpy(result, disk, FILENAME_MAX);
+     if(!path_to_device_mapper || !*path_to_device_mapper || !get_disk_name_from_path(path_to_device_mapper, result, FILENAME_MAX + 1, major, minor, disk, NULL, 0))
+         if(!path_to_device_label || !*path_to_device_label || !get_disk_name_from_path(path_to_device_label, result, FILENAME_MAX + 1, major, minor, disk, NULL, 0))
+-            if(!path_to_veritas_volume_groups || !*path_to_veritas_volume_groups || !get_disk_name_from_path(path_to_veritas_volume_groups, result, FILENAME_MAX + 1, major, minor, disk, "vx", 2))
+-                if(name_disks_by_id != CONFIG_BOOLEAN_YES || !path_to_device_id || !*path_to_device_id || !get_disk_name_from_path(path_to_device_id, result, FILENAME_MAX + 1, major, minor, disk, NULL, 0))
+-                    strncpy(result, disk, FILENAME_MAX);
++            if(name_disks_by_vdev != CONFIG_BOOLEAN_YES || !path_to_device_vdev || !*path_to_device_vdev || !get_disk_name_from_path(path_to_device_vdev, result, FILENAME_MAX + 1, major, minor, disk, NULL, 0))
++              if(!path_to_veritas_volume_groups || !*path_to_veritas_volume_groups || !get_disk_name_from_path(path_to_veritas_volume_groups, result, FILENAME_MAX + 1, major, minor, disk, "vx", 2))
++                  if(name_disks_by_id != CONFIG_BOOLEAN_YES || !path_to_device_id || !*path_to_device_id || !get_disk_name_from_path(path_to_device_id, result, FILENAME_MAX + 1, major, minor, disk, NULL, 0))
++                      strncpy(result, disk, FILENAME_MAX);
  
      if(!result[0])
          strncpy(result, disk, FILENAME_MAX);
-@@ -787,9 +790,13 @@
+@@ -825,12 +828,16 @@ int do_proc_diskstats(int update_every, usec_t dt) {
          snprintfz(buffer, FILENAME_MAX, "%s/dev/disk/by-label", netdata_configured_host_prefix);
-         path_to_device_label = config_get(CONFIG_SECTION_DISKSTATS, "path to /dev/disk/by-label", buffer);
+         path_to_device_label = config_get(CONFIG_SECTION_PLUGIN_PROC_DISKSTATS, "path to /dev/disk/by-label", buffer);
  
 +        snprintfz(buffer, FILENAME_MAX, "%s/dev/disk/by-vdev", netdata_configured_host_prefix);
-+        path_to_device_vdev = config_get(CONFIG_SECTION_DISKSTATS, "path to /dev/disk/by-vdev", buffer);
++        path_to_device_vdev = config_get(CONFIG_SECTION_PLUGIN_PROC_DISKSTATS, "path to /dev/disk/by-vdev", buffer);
 +
          snprintfz(buffer, FILENAME_MAX, "%s/dev/disk/by-id", netdata_configured_host_prefix);
-         path_to_device_id = config_get(CONFIG_SECTION_DISKSTATS, "path to /dev/disk/by-id", buffer);
+         path_to_device_id = config_get(CONFIG_SECTION_PLUGIN_PROC_DISKSTATS, "path to /dev/disk/by-id", buffer);
  
-+        name_disks_by_vdev = config_get_boolean(CONFIG_SECTION_DISKSTATS, "name disks by vdev", name_disks_by_vdev);
-         name_disks_by_id = config_get_boolean(CONFIG_SECTION_DISKSTATS, "name disks by id", name_disks_by_id);
+         snprintfz(buffer, FILENAME_MAX, "%s/dev/vx/dsk", netdata_configured_host_prefix);
+         path_to_veritas_volume_groups = config_get(CONFIG_SECTION_PLUGIN_PROC_DISKSTATS, "path to /dev/vx/dsk", buffer);
+ 
++        name_disks_by_vdev = config_get_boolean(CONFIG_SECTION_PLUGIN_PROC_DISKSTATS, "name disks by vdev", name_disks_by_vdev);
+         name_disks_by_id = config_get_boolean(CONFIG_SECTION_PLUGIN_PROC_DISKSTATS, "name disks by id", name_disks_by_id);
  
          excluded_disks = simple_pattern_create(
